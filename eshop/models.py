@@ -29,7 +29,7 @@ class Product:
         """
         if self.check_quantity(quantity):
             self.quantity -= quantity
-            return self.quantity
+            return True
         else:
             raise ValueError("Недостаточное количество товара")
 
@@ -83,7 +83,7 @@ class Cart:
         В этом случае нужно выбросить исключение ValueError
         """
         for product, quantity in self.products.items():
-            if product.check_quantity(quantity):
-                return product.buy(quantity)
+            if product.quantity >= quantity:
+                product.buy(quantity)
             else:
                 raise ValueError("Недостаточное количество товара")
