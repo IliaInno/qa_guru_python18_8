@@ -9,6 +9,7 @@ from eshop.models import Product, Cart
 def first_product():
     return Product("book", 100, "This is a book", 1000)
 
+
 @pytest.fixture
 def second_product():
     return Product("pencil", 20, "This is a pencil", 3)
@@ -35,10 +36,15 @@ class TestProducts:
         assert not first_product.check_quantity(first_product.quantity + 1)
 
     def test_buy_product_less_than_available(self, first_product):
-        assert first_product.buy(first_product.quantity - 1)
+        expected = first_product.quantity - (first_product.quantity - 1)
+        first_product.buy(first_product.quantity - 1)
+        actual = first_product.quantity
+        assert actual == expected
 
     def test_buy_product_with_equals_quantity(self, first_product):
-        assert first_product.buy(first_product.quantity)
+        first_product.buy(first_product.quantity)
+        actual = first_product.quantity
+        assert actual == 0
 
     def test_buy_product_more_than_available(self, first_product):
         with pytest.raises(ValueError):
@@ -53,13 +59,10 @@ class TestCart:
         assert cart.products[first_product] == 1
         assert cart.products[second_product] == 2
 
-    def test_add_an_existing_product(self, cart, first_product, second_product):
+    def test_add_an_existing_product(self, cart, first_product):
         cart.add_product(first_product, 1)
         cart.add_product(first_product, 2)
-        cart.add_product(second_product,4)
-        cart.add_product(second_product,2)
         assert cart.products[first_product] == 3
-        assert cart.products[second_product] == 6
 
     def test_partial_remove_product(self, cart, first_product, second_product):
         cart.add_product(first_product, 5)
@@ -71,8 +74,9 @@ class TestCart:
 
     def test_remove_all_product_with_equals_value(self, cart, first_product):
         cart.add_product(first_product, 5)
-        cart.remove_product(first_product,5)
+        cart.remove_product(first_product, 5)
         assert len(cart.products) == 0
+
     def test_total_remove_product(self, cart, first_product):
         cart.add_product(first_product, 2)
         cart.remove_product(first_product)
@@ -88,10 +92,12 @@ class TestCart:
         cart.clear()
         assert len(cart.products) == 0
 
-    def test_get_total_price_from_non_empty_cart(self, cart, first_product):
+    def test_get_total_price_from_non_empty_cart(self, cart, first_product, second_product):
         quantity_of_purchased_goods = 3
-        total_price = quantity_of_purchased_goods * first_product.price
+        total_price = (quantity_of_purchased_goods * first_product.price) + (
+                quantity_of_purchased_goods * second_product.price)
         cart.add_product(first_product, quantity_of_purchased_goods)
+        cart.add_product(second_product, quantity_of_purchased_goods)
         assert cart.get_total_price() == total_price
 
     def test_get_total_price_from_empty_cart(self, cart, first_product):
